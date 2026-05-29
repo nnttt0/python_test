@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中风风险预测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4E6CF7;
+            --success: #00B42A;
+            --warning: #FF7D00;
+            --danger: #F53F3F;
+            --gray-50: #F7F8FA;
+            --gray-100: #E5E6EB;
+            --gray-200: #C9CDD4;
+            --gray-600: #4E5969;
+            --gray-900: #1D2129;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* 标签页 */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: white;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-100);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .card.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 24px;
+        }
+
+        /* 表单 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid var(--gray-100);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(78, 108, 247, 0.15);
+        }
+
+        /* 按钮 */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #405DE6;
+        }
+
+        .btn-secondary {
+            background: var(--gray-600);
+        }
+
+        .btn-secondary:hover {
+            background: #3D4654;
+        }
+
+        /* 上传区域 */
+        .upload-area {
+            border: 1px dashed var(--gray-200);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(78, 108, 247, 0.03);
+        }
+
+        .upload-area p {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
+
+        .upload-area small {
+            font-size: 12px;
+            color: var(--gray-200);
+        }
+
+        /* 结果卡片 */
+        .risk-card {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .risk-card.danger {
+            background: rgba(245, 63, 63, 0.06);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .risk-card.warning {
+            background: rgba(255, 125, 0, 0.06);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .risk-card.safe {
+            background: rgba(0, 180, 42, 0.06);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .risk-percent {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 12px 0;
+        }
+
+        .risk-bar-container {
+            background: var(--gray-100);
+            border-radius: 4px;
+            height: 6px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+
+        .risk-bar {
+            background: var(--danger);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* 统计卡片 */
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 120px;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            background: white;
+            border: 1px solid var(--gray-100);
+        }
+
+        .stat-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-card p {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        /* 表格 */
+        .table-container {
+            overflow-x: auto;
+            max-height: 480px;
+            margin-top: 16px;
+            border: 1px solid var(--gray-100);
+            border-radius: 8px;
+        }
+
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .table-container th,
+        .table-container td {
+            border-bottom: 1px solid var(--gray-100);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .table-container th {
+            background: var(--gray-50);
+            font-weight: 500;
+            color: var(--gray-600);
+            position: sticky;
+            top: 0;
+        }
+
+        .table-container tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* 加载动画 */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--gray-100);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 布局 */
+        .text-center {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--gray-200);
+            margin-top: 40px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏥 中风风险预测系统</h1>
+        <p>基于机器学习的智能健康评估工具</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('single')">单条预测</button>
+        <button class="tab-btn" onclick="switchTab('batch')">批量预测</button>
+    </div>
+
+    <!-- 单条预测 -->
+    <div id="singleCard" class="card active">
+        <h2>患者健康信息录入</h2>
+        <form id="predictForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>性别 *</label>
+                    <select name="gender" required>
+                        <option value="Male">男</option>
+                        <option value="Female">女</option>
+                        <option value="Other">其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>年龄 *</label>
+                    <!-- 关键修复：min="0" 禁止输入负数 -->
+                    <input type="number" name="age" min="0" step="1" required placeholder="请输入年龄">
+                </div>
+
+                <div class="form-group">
+                    <label>高血压</label>
+                    <select name="hypertension">
+                        <option value="0">无</option>
+                        <option value="1">有</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>心脏病</label>
+                    <select name="heart_disease">
+                        <option value="0">无</option>
+                        <option value="1">有</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>婚姻状态</label>
+                    <select name="ever_married">
+                        <option value="Yes">是</option>
+                        <option value="No">否</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>工作类型</label>
+                    <select name="work_type">
+                        <option value="Private">私营企业</option>
+                        <option value="Self-employed">自雇</option>
+                        <option value="Govt_job">政府工作</option>
+                        <option value="children">儿童</option>
+                        <option value="Never_worked">从未工作</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>居住类型</label>
+                    <select name="Residence_type">
+                        <option value="Urban">城市</option>
+                        <option value="Rural">农村</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>平均血糖水平 *</label>
+                    <input type="number" name="avg_glucose_level" min="0" step="0.01" required placeholder="例如：100.5">
+                </div>
+
+                <div class="form-group">
+                    <label>BMI 指数</label>
+                    <input type="number" name="bmi" min="0" step="0.1" placeholder="例如：25.3">
+                </div>
+
+                <div class="form-group">
+                    <label>吸烟状态</label>
+                    <select name="smoking_status">
+                        <option value="never smoked">从不吸烟</option>
+                        <option value="formerly smoked">曾经吸烟</option>
+                        <option value="smokes">吸烟</option>
+                        <option value="Unknown">未知</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn">开始预测</button>
+            </div>
+        </form>
+
+        <div id="predictResult"></div>
+    </div>
+
+    <!-- 批量预测 -->
+    <div id="batchCard" class="card">
+        <h2>批量预测（CSV 文件）</h2>
+        <div class="upload-area" id="uploadArea">
+            <p>点击或拖拽上传 CSV 文件</p>
+            <small>支持格式：.csv 标准数据集</small>
+            <input type="file" id="fileInput" accept=".csv" style="display:none">
+        </div>
+        <div class="text-center">
+            <button id="batchPredictBtn" class="btn">开始预测</button>
+            <button id="exportBtn" class="btn btn-secondary" style="margin-left:12px;display:none;">导出结果</button>
+        </div>
+        <div id="batchResult"></div>
+
+        <!-- 可视化区域 - 确保在 batchCard 内部 -->
+        <div id="visualizationSection" style="margin-top: 30px; display: none;">
+            <h3>数据可视化分析</h3>
+            <div class="chart-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button class="chart-btn" data-chart="histogram">年龄分布</button>
+                <button class="chart-btn" data-chart="boxplot">血糖与风险</button>
+                <button class="chart-btn" data-chart="correlation">相关性热力图</button>
+                <button class="chart-btn" data-chart="bar">工作类型风险</button>
+                <button class="chart-btn" data-chart="pie">风险分布饼图</button>
+                <button class="chart-btn" data-chart="line">年龄风险趋势</button>
+            </div>
+            <div id="chartContainer"
+                 style="min-height: 400px; background: #f8f9fa; border-radius: 12px; padding: 20px; display: flex; justify-content: center; align-items: center;">
+                <p style="color: #999;">点击上方按钮生成图表</p>
+            </div>
+        </div>
+
+        <!-- 聚类分析区域 -->
+        <div id="clusterSection" style="margin-top: 30px; display: none;">
+            <h3>K-Means 聚类分析</h3>
+            <div style="margin-bottom: 20px;">
+                <label for="nClusters">聚类数量：</label>
+                <input type="number" id="nClusters" value="3" min="2" max="10" style="width: 80px; padding: 5px;">
+                <button id="clusterBtn" class="btn" style="margin-left: 10px;">开始聚类</button>
+            </div>
+            <div id="clusterResult"></div>
+        </div>
+    </div>
+
+    <footer>
+        本系统仅作健康参考，不替代专业医疗诊断
+    </footer>
+</div>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+</div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+    let currentData = null;
+
+    // 切换标签
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+
+        if (tab === 'single') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('singleCard').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('batchCard').classList.add('active');
+        }
+    }
+
+    // 加载动画
+    function showLoading(show) {
+        document.getElementById('loading').classList.toggle('show', show);
+    }
+
+    // 单条预测
+    document.getElementById('predictForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading(true);
+
+        const formData = new FormData(e.target);
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('predictResult').innerHTML = `
+                        <div class="risk-card ${data.level}">
+                            <h3>评估结果</h3>
+                            <div class="risk-percent">${data.risk_percent}%</div>
+                            <div class="risk-bar-container">
+                                <div class="risk-bar" style="width: ${data.risk_percent}%"></div>
+                            </div>
+                            <p style="font-weight:500;margin-top:8px;">${data.suggestion}</p>
+                            <p style="font-size:13px;margin-top:8px;opacity:0.9;">${data.message}</p>
+                        </div>
+                    `;
+            } else {
+                alert('预测失败：' + data.error);
+            }
+        } catch (error) {
+            alert('请求失败：' + error);
+        }
+
+        showLoading(false);
+    });
+
+    // 文件上传
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            uploadArea.innerHTML = `
+                    <p>✅ 已选择：${file.name}</p>
+                    <small>点击重新选择</small>
+                    <input type="file" id="fileInput" accept=".csv" style="display:none">
+                `;
+            uploadArea.style.borderColor = '#00B42A';
+        }
+    });
+
+    // 批量预测
+    document.getElementById('batchPredictBtn').addEventListener('click', async () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('请先选择文件');
+            return;
+        }
+
+        showLoading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                currentData = data.data;
+
+                document.getElementById('batchResult').innerHTML = `
+                        <div>
+                            <div class="stats">
+                                <div class="stat-card">
+                                    <h3>${data.total}</h3>
+                                    <p>总人数</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 style="color:var(--danger)">${data.high_count}</h3>
+                                    <p>高风险</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 style="color:var(--warning)">${data.medium_count}</h3>
+                                    <p>中风险</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 style="color:var(--success)">${data.low_count}</h3>
+                                    <p>低风险</p>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                ${data.html_table}
+                            </div>
+                        </div>
+                    `;
+
+                document.getElementById('exportBtn').style.display = 'inline-block';
+            } else {
+                alert('预测失败：' + data.error);
+            }
+        } catch (error) {
+            alert('请求失败：' + error);
+        }
+
+        showLoading(false);
+    });
+
+    // 导出
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+        if (!currentData) return;
+        showLoading(true);
+
+        try {
+            const response = await fetch('/export', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(currentData)
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                const blob = new Blob([data.csv_data], {type: 'text/csv;charset=utf-8;'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '中风风险预测结果.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } else {
+                alert('导出失败');
+            }
+        } catch (error) {
+            alert('导出失败');
+        }
+
+        showLoading(false);
+    });
+</script>
+</body>
+</html>

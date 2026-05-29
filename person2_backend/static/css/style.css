@@ -1,0 +1,34 @@
+.chart-tabs {
+    border-bottom: 1px solid var(--gray-100);
+    padding-bottom: 12px;
+}
+
+.chart-btn {
+    background: white;
+    border: 1px solid var(--gray-100);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chart-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* 聚类分析区域样式 */
+#clusterSection {
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+#clusterSection h3 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+}
